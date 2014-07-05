@@ -1,0 +1,11 @@
+{
+  "name": "dawehner/ipython_php",
+  "require": {
+     "php": ">=5.4.0",
+     "d11wtq/boris": "dev-master",
+     "react/zmq": "0.3.*",
+     "react/socket": "dev-master",
+    "rhumsaa/uuid": "~2.7",
+    "moriony/php-zmq-stubs": "dev-master"
+  }
+}
