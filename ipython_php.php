@@ -49,6 +49,7 @@ if (!isset(Kernel::getSignatureSchemes()[$kernel->getSignatureScheme()])) {
 // Open all needed sockets.
 $context = new ZMQContext();
 $loop = React\EventLoop\Factory::create();
+/** @var $context \ZMQContext */
 $context = new React\ZMQ\Context($loop);
 
 /** @var $hb_socket \ZMQSocket */
