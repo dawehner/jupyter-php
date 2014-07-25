@@ -4,7 +4,6 @@ use dawehner\IPythonPhp\Kernel;
 use Rhumsaa\Uuid\Uuid;
 
 require 'vendor/autoload.php';
-require "functions.php";
 
 // @TODO Write actual code, not just pseudo code.
 
@@ -67,13 +66,11 @@ $shell_socket->bind($shell_connection);
 
 // Register handlers.
 $hb_socket->on('error', function ($e) {
-  var_dump($e->getMessage());
 });
 
 // The heartbeat socket just sends its recieved data to tell ipython, that it
 // still lives.
 $hb_socket->on('messages', function ($msg) {
-  echo sprintf("Received: %s\n", print_r($msg, TRUE));
 });
 
 $shell_socket->on('messages', function($messages) use($shell_socket, $iopub_socket) {
@@ -87,10 +84,6 @@ $shell_socket->on('messages', function($messages) use($shell_socket, $iopub_sock
     send($shell_socket, 'kernel_info_reply', Kernel::getMessageKernelInfo(), $header);
   }
   elseif ($header->msg_type == 'execute_request') {
-    syslog(0, print_r($header, TRUE));
-    syslog(0, print_r($content, TRUE));
-    syslog(0, "execute request\n");
-
     send($iopub_socket, 'status', array('execution_state' => 'busy'), $header);
 
     ob_start();
@@ -113,7 +106,6 @@ $shell_socket->on('messages', function($messages) use($shell_socket, $iopub_sock
 });
 
 $iopub_socket->on('messages', function($messages) {
-  syslog(0, "iopub\n");
 });
 
 $loop->run();
