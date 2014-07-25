@@ -18,9 +18,11 @@ class MessageShutdownRequest implements MessageInterface {
     $this->kernel->send(
       $this->shellSocket,
       'shutdown_reply',
-      array('restart' => TRUE),
+      array('restart' => $content->restart),
       $header
     );
+    // @todo is there a nice way to shutdown?
+    exit;
   }
 
 }
