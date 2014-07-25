@@ -1,6 +1,7 @@
 <?php
 
 use dawehner\IPythonPhp\Kernel;
+use dawehner\IPythonPhp\MessageExecuteRequest;
 use Rhumsaa\Uuid\Uuid;
 
 require 'vendor/autoload.php';
@@ -9,6 +10,8 @@ require 'vendor/autoload.php';
 
 // Setup the connection strings we want to use.
 // Either coming from the kernel argument or callback to a default.
+
+$kernel = new Kernel();
 if (isset($argv[1])) {
   $config = json_decode(file_get_contents($argv[1]));
   $ip = $config->ip;
@@ -19,8 +22,8 @@ if (isset($argv[1])) {
   $shell_port = $config->shell_port;
   $iopub_port = $config->iopub_port;
 
-  $secure_key = $config->key;
-  $signature_scheme = $config->signature_scheme;
+  $kernel->setSecureKey($config->key);
+  $kernel->setSignatureScheme($config->signature_scheme);
 }
 else {
   trigger_error("no config file specified.");
@@ -36,11 +39,10 @@ $iopub_connection = $connection . $iopub_port;
 
 
 $session_id = Uuid::uuid4();
-$engine_id = Uuid::uuid4();
+$kernel->setEngineId(Uuid::uuid4());
 
-$signature_schemes = ['hmac-sha256' => 'sha256'];
-if (!isset($signature_schemes[$signature_scheme])) {
-  trigger_error("invalid signature scheme:$signature_scheme\n");
+if (!isset(Kernel::getSignatureSchemes()[$kernel->getSignatureScheme()])) {
+  trigger_error("invalid signature scheme:{$kernel->getSignatureScheme()}\n");
   exit;
 }
 
@@ -65,47 +67,54 @@ $shell_socket = $context->getSocket(ZMQ::SOCKET_ROUTER);
 $shell_socket->bind($shell_connection);
 
 // Register handlers.
-$hb_socket->on('error', function ($e) {
-});
+$hb_socket->on(
+  'error',
+  function ($e) {
+  }
+);
 
 // The heartbeat socket just sends its recieved data to tell ipython, that it
 // still lives.
-$hb_socket->on('messages', function ($msg) {
-});
-
-$shell_socket->on('messages', function($messages) use($shell_socket, $iopub_socket) {
-  list($zmq_id, $delim, $hmac, $header, $parent_header, $metadata, $content) = $messages;
-
-  $header = json_decode($header);
-  $content = json_decode($content);
-
-  if ($header->msg_type == 'kernel_info_request') {
-    syslog(0, "kernel info request\n");
-    send($shell_socket, 'kernel_info_reply', Kernel::getMessageKernelInfo(), $header);
+$hb_socket->on(
+  'messages',
+  function ($msg) {
   }
-  elseif ($header->msg_type == 'execute_request') {
-    send($iopub_socket, 'status', array('execution_state' => 'busy'), $header);
+);
 
-    ob_start();
-    $result = eval($content->code);
-    $std_out = ob_get_contents();
-    ob_end_clean();
+$message_execute_request = new MessageExecuteRequest(
+  $kernel,
+  $iopub_socket,
+  $shell_socket
+);
 
-    send($shell_socket, 'execute_reply', array('status' => 'ok'), $header);
-    send($iopub_socket, 'stream', array('name' => 'stdout', 'data'=> $std_out), $header);
-    send($iopub_socket, 'execute_result', array('execution_count' => 0, 'data' => $result, 'metadata' => array()), $header);
+$message_kernel_info_request = new MessageKernelInfoRequest($kernel, $shell_socket);
 
-    send($iopub_socket, 'status', array('execution_state' => 'idle'), $header);
+$shell_socket->on(
+  'messages',
+  function ($messages) use ($shell_socket, $iopub_socket, $kernel, $message_execute_request) {
+    list($zmq_id, $delim, $hmac, $header, $parent_header, $metadata, $content) = $messages;
+
+    $header = json_decode($header);
+    $content = json_decode($content);
+
+    if ($header->msg_type == 'kernel_info_request') {
+    }
+    elseif ($header->msg_type == 'execute_request') {
+      $message_execute_request->execute($header, $content);
+    }
+    elseif ($header->msg_type == 'history_request') {
+      trigger_error('unhandled history request');
+    }
+    else {
+      trigger_error('unknown msg_type: ' . $header->msg_type);
+    }
   }
-  elseif ($header->msg_type == 'history_request') {
-    trigger_error('unhandled history request');
-  }
-  else {
-    trigger_error('unknown msg_type: ' . $header->msg_type);
-  }
-});
+);
 
-$iopub_socket->on('messages', function($messages) {
-});
+$iopub_socket->on(
+  'messages',
+  function ($messages) {
+  }
+);
 
 $loop->run();
