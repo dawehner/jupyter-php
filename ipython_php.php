@@ -2,15 +2,14 @@
 
 use dawehner\IPythonPhp\Kernel;
 use dawehner\IPythonPhp\MessageExecuteRequest;
+use dawehner\IPythonPhp\MessageKernelInfoRequest;
+use dawehner\IPythonPhp\MessageShutdownRequest;
 use Rhumsaa\Uuid\Uuid;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 require 'vendor/autoload.php';
 
-// @TODO Write actual code, not just pseudo code.
-
-// Setup the connection strings we want to use.
-// Either coming from the kernel argument or callback to a default.
-
+// Setup the connection strings we want to use, coming from the kernel argument.
 $kernel = new Kernel();
 if (isset($argv[1])) {
   $config = json_decode(file_get_contents($argv[1]));
@@ -81,29 +80,31 @@ $hb_socket->on(
   }
 );
 
-$message_execute_request = new MessageExecuteRequest(
-  $kernel,
-  $iopub_socket,
-  $shell_socket
-);
+$event_dispatcher = new EventDispatcher();
 
+$message_execute_request = new MessageExecuteRequest($kernel, $iopub_socket, $shell_socket);
 $message_kernel_info_request = new MessageKernelInfoRequest($kernel, $shell_socket);
+$message_shutdown_request = new MessageShutdownRequest($kernel, $shell_socket);
 
 $shell_socket->on(
   'messages',
-  function ($messages) use ($shell_socket, $iopub_socket, $kernel, $message_execute_request) {
+  function ($messages) use ($shell_socket, $iopub_socket, $kernel, $message_execute_request, $message_kernel_info_request, $message_shutdown_request) {
     list($zmq_id, $delim, $hmac, $header, $parent_header, $metadata, $content) = $messages;
 
     $header = json_decode($header);
     $content = json_decode($content);
 
     if ($header->msg_type == 'kernel_info_request') {
+      $message_kernel_info_request->execute($header, $content);
     }
     elseif ($header->msg_type == 'execute_request') {
       $message_execute_request->execute($header, $content);
     }
     elseif ($header->msg_type == 'history_request') {
       trigger_error('unhandled history request');
+    }
+    elseif ($header->msg_type == 'shutdown_request') {
+      $message_shutdown_request->execute($header, $content);
     }
     else {
       trigger_error('unknown msg_type: ' . $header->msg_type);

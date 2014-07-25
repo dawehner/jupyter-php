@@ -5,8 +5,9 @@
      "d11wtq/boris": "dev-master",
      "react/zmq": "0.3.*",
      "react/socket": "dev-master",
-    "rhumsaa/uuid": "~2.7",
-    "moriony/php-zmq-stubs": "dev-master"
+     "rhumsaa/uuid": "~2.7",
+     "moriony/php-zmq-stubs": "dev-master",
+     "symfony/event-dispatcher": "2.5.x-dev"
   },
   "autoload": {
     "psr-4": { "dawehner\\IPythonPhp\\": "src/" }

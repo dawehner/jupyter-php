@@ -7,7 +7,7 @@
 
 namespace dawehner\IPythonPhp;
 
-class MessageExecuteRequest {
+class MessageExecuteRequest implements MessageInterface  {
 
   /**
    * @var Kernel
