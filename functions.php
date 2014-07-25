@@ -13,19 +13,20 @@ function msg_id() {
  * Sign a message with a secure key.
  */
 function sign($message_list) {
-  $data = implode(" ", $message_list);
-
   global $signature_schemes;
   global $signature_scheme;
   global $secure_key;
 
-  // We want to return hex16 numbers (FALSE).
-  return hash_hmac($signature_schemes[$signature_scheme], $data, $secure_key, FALSE);
+  $hm = hash_init($signature_schemes[$signature_scheme], HASH_HMAC, $secure_key);
+  foreach ($message_list as $item) {
+    hash_update($hm, $item);
+  }
+  return hash_final($hm);
 }
 
 function new_header($msg_type) {
   return [
-    "date" => date('YYYY-MM-DD'),
+    "date" => (new DateTime('NOW'))->format('c'),
     "msg_id" => msg_id(),
     "username" => "kernel",
     "session" => $GLOBALS['engine_id'],
@@ -65,7 +66,6 @@ function send($stream, $msg_type, $content = NULL, $parent_header = NULL, $metad
   $parts = [];
   $parts[] = $delim;
   $parts[] = sign($msg_list);
-  $parts[] = '';
   $parts[] = $msg_list[0];
   $parts[] = $msg_list[1];
   $parts[] = $msg_list[2];
