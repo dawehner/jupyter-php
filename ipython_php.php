@@ -50,18 +50,23 @@ $context = new ZMQContext();
 $loop = React\EventLoop\Factory::create();
 $context = new React\ZMQ\Context($loop);
 
+/** @var $hb_socket \ZMQSocket */
 $hb_socket = $context->getSocket(ZMQ::SOCKET_REP);
 $hb_socket->bind($hb_connection);
 
+/** @var $iopub_socket \ZMQSocket */
 $iopub_socket = $context->getSocket(ZMQ::SOCKET_PUB);
 $iopub_socket->bind($iopub_connection);
 
+/** @var $control_socket \ZMQSocket */
 $control_socket = $context->getSocket(ZMQ::SOCKET_ROUTER);
 $control_socket->bind($control_connection);
 
+/** @var $stdin_socket \ZMQSocket */
 $stdin_socket = $context->getSocket(ZMQ::SOCKET_ROUTER);
 $stdin_socket->bind($stdin_connection);
 
+/** @var $shell_socket \ZMQSocket */
 $shell_socket = $context->getSocket(ZMQ::SOCKET_ROUTER);
 $shell_socket->bind($shell_connection);
 
