@@ -2,6 +2,7 @@
 
 use dawehner\IPythonPhp\Kernel;
 use dawehner\IPythonPhp\MessageExecuteRequest;
+use dawehner\IPythonPhp\MessageHistoryRequest;
 use dawehner\IPythonPhp\MessageKernelInfoRequest;
 use dawehner\IPythonPhp\MessageShutdownRequest;
 use Rhumsaa\Uuid\Uuid;
@@ -90,10 +91,11 @@ $event_dispatcher = new EventDispatcher();
 $message_execute_request = new MessageExecuteRequest($kernel, $iopub_socket, $shell_socket);
 $message_kernel_info_request = new MessageKernelInfoRequest($kernel, $shell_socket);
 $message_shutdown_request = new MessageShutdownRequest($kernel, $shell_socket);
+$message_history_request = new MessageHistoryRequest($kernel, $shell_socket);
 
 $shell_socket->on(
   'messages',
-  function ($messages) use ($shell_socket, $iopub_socket, $kernel, $message_execute_request, $message_kernel_info_request, $message_shutdown_request) {
+  function ($messages) use ($shell_socket, $iopub_socket, $kernel, $message_execute_request, $message_kernel_info_request, $message_shutdown_request, $message_history_request) {
     list($zmq_id, $delim, $hmac, $header, $parent_header, $metadata, $content) = $messages;
 
     $header = json_decode($header);
@@ -106,7 +108,7 @@ $shell_socket->on(
       $message_execute_request->execute($header, $content);
     }
     elseif ($header->msg_type == 'history_request') {
-      trigger_error('unhandled history request');
+      $message_history_request->execute($header, $content);
     }
     elseif ($header->msg_type == 'shutdown_request') {
       $message_shutdown_request->execute($header, $content);

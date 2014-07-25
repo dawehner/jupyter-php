@@ -15,6 +15,12 @@ class MessageHistoryRequest implements MessageInterface {
   }
 
   public function execute(array $header, $content) {
+    $this->kernel->send(
+      $this->shellSocket,
+      'history_reply',
+      array('history' => array()),
+      $header
+    );
   }
 
 }
