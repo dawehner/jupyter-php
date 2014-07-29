@@ -21,7 +21,7 @@ class MessageKernelInfoRequest implements MessageInterface {
     $this->shellSocket = $shellSocket;
   }
 
-  public function execute(array $header, $content) {
+  public function execute(\stdClass $header, $content) {
     $this->kernel->send(
       $this->shellSocket,
       'kernel_info_reply',
