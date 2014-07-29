@@ -34,10 +34,13 @@ class MessageExecuteRequest implements MessageInterface  {
 
     $execution_count = isset($content->execution_count) ? $content->execution_count : 0;
 
+    $vars_before = get_defined_vars();
     ob_start();
     $result = eval($content->code);
     $std_out = ob_get_contents();
     ob_end_clean();
+    $vars_after = get_defined_vars();
+    // @todo How do we store variables ...
 
     $this->kernel->send(
       $this->shellSocket,
