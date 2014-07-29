@@ -1,7 +1,7 @@
 Installation
 ------------
 
-* Install [IPython](http://ipython.org) 3.x
+* Install [IPython](http://ipython.org) 2.x
 * Install [Composer](https://getcomposer.org/)
 * Install the dependencies:
   composer.phar install
