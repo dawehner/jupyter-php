@@ -1,0 +1,13 @@
+{
+ "argv": [
+   "php",
+   "/home/dawehner/Documents/Projekte/ipython-php/ipython_php.php",
+   "{connection_file}"
+ ],
+ "codemirror_mode": {
+  "version": 5,
+  "name": "php"
+ },
+ "display_name": "PHP 5.x",
+ "language": "php"
+}
