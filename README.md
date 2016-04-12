@@ -1,3 +1,6 @@
+DEPRECATED, use https://github.com/Litipk/Jupyter-PHP instead!
+
+
 Installation
 ------------
 
